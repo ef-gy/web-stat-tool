@@ -17,21 +17,55 @@
 
   <xsl:template match="/">
     <wst:web-statistics source="alexa">
-      <xsl:apply-templates select="//strong"/>
+      <xsl:apply-templates select="//*[contains(@class,'metrics-data')] | //*[contains(@class,'box1-r')]"/>
     </wst:web-statistics>
   </xsl:template>
 
   <xsl:template match="strong[contains(@class,'metrics-data')][ancestor::span[contains(@data-cat,'globalRank')]]">
-    <wst:rank scope="global"><xsl:value-of select="."/></wst:rank>
+    <wst:rank scope="global"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:rank>
   </xsl:template>
 
   <xsl:template match="strong[contains(@class,'metrics-data')][ancestor::span[contains(@data-cat,'countryRank')]]">
-    <wst:rank scope="country" area="{../../h4/a/@title}"><xsl:value-of select="."/></wst:rank>
+    <wst:rank scope="country" area="{../../h4/a/@title}"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:rank>
   </xsl:template>
 
-  <xsl:template match="*[contains(@class,'metrics-data')]">
-    <wst:metric><xsl:value-of select="."/></wst:metric>
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(preceding-sibling::h4,'Daily Unique Visitors')]">
+    <wst:unique-visitors time-frame="daily"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:unique-visitors>
   </xsl:template>
 
-  <xsl:template match="strong"/>
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(preceding-sibling::h4,'Daily Pageviews')]">
+    <wst:page-views time-frame="daily"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:page-views>
+  </xsl:template>
+
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(preceding-sibling::h4,'Monthly Unique Visitors')]">
+    <wst:unique-visitors time-frame="monthly"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:unique-visitors>
+  </xsl:template>
+
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(preceding-sibling::h4,'Monthly Pageviews')]">
+    <wst:page-views time-frame="monthly"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:page-views>
+  </xsl:template>
+
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(parent::div/preceding-sibling::h4,'Bounce Rate')]">
+    <wst:bounce-rate><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:bounce-rate>
+  </xsl:template>
+
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(parent::div/preceding-sibling::h4,'Daily Pageviews per Visitor')]">
+    <wst:page-views-per-visitor time-frame="daily"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:page-views-per-visitor>
+  </xsl:template>
+
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(parent::div/preceding-sibling::h4,'Daily Time on Site')]">
+    <wst:time-on-site time-frame="daily"><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:time-on-site>
+  </xsl:template>
+
+  <xsl:template match="strong[contains(@class,'metrics-data')][contains(parent::div/preceding-sibling::h4,'Search Visits')]">
+    <wst:search-visits><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:search-visits>
+  </xsl:template>
+
+  <xsl:template match="span[contains(@class,'box1-r')][contains(preceding-sibling::h5,'Total Sites Linking In')]">
+    <wst:inbound-links><wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric></wst:inbound-links>
+  </xsl:template>
+
+  <xsl:template match="*[contains(@class,'metrics-data') or contains(@class,'box1-r')]">
+    <wst:metric><xsl:value-of select="translate(.,',','')"/></wst:metric>
+  </xsl:template>
 </xsl:stylesheet>
