@@ -1,0 +1,5 @@
+#!/bin/sh
+
+WST_XSLTPATH=./xslt
+
+curl "https://plusone.google.com/_/+1/fastbutton?url=$1" -s|xsltproc --html --nonet --novalid "$WST_XSLTPATH/web-stat-tool-google-plus.xslt" - 2>/dev/null
