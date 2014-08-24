@@ -182,8 +182,8 @@ var wst = {
     var URLs = [];
 
     function process() {
-      stats.getURLStatistics(URLs, console.log);
-      stats.getDomainStatistics(URLs, console.log);
+      stats.getURLStatistics(URLs, statCallback);
+      stats.getDomainStatistics(URLs, statCallback);
     }
 
     this.fetchPage(pURL.protocol == 'https:' ? https : http, url.format(pURL), function(body) {
@@ -206,4 +206,4 @@ var wst = {
 //wst.getURLStatistics(process.argv.slice(2), console.log);
 //wst.getDomainStatistics(process.argv.slice(2), console.log);
 
-wst.getSitemap(process.argv.slice(2));
+wst.getSitemap(process.argv.slice(2), console.log);
