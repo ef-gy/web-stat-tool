@@ -107,7 +107,7 @@ var wst = {
       statCallback({
         'source': 'stumbleupon.com',
         'url': URL,
-        'views': interactions.result.views,
+        'views': interactions.result ? interactions.result.views : null,
         'raw': interactions
       });
     });
@@ -168,8 +168,42 @@ var wst = {
   },
 
   getSitemap : function (URL, statCallback) {
+    if ((typeof URL) === 'object')
+    {
+      for (i in URL)
+      {
+        this.getSitemap(URL[i], statCallback);
+      }
+      return;
+    }
+
+    var pURL = url.parse(URL);
+    var stats = this;
+    var URLs = [];
+
+    function process() {
+      stats.getURLStatistics(URLs, console.log);
+      stats.getDomainStatistics(URLs, console.log);
+    }
+
+    this.fetchPage(pURL.protocol == 'https:' ? https : http, url.format(pURL), function(body) {
+      var $ = cheerio.load(body);
+
+      $('url').each(function(i,element) {
+        statCallback({
+         'source': URL,
+         'url': $('loc', this).text(),
+         'lastModified': $('lastmod', this).text()
+        });
+        URLs.push($('loc', this).text());
+      });
+
+      process();
+    });
   }
 }
 
-wst.getURLStatistics(process.argv.slice(2), console.log);
-wst.getDomainStatistics(process.argv.slice(2), console.log);
+//wst.getURLStatistics(process.argv.slice(2), console.log);
+//wst.getDomainStatistics(process.argv.slice(2), console.log);
+
+wst.getSitemap(process.argv.slice(2));
