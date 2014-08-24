@@ -90,6 +90,30 @@ var wst = {
     });
   },
 
+  getLinkedin : function (URL, statCallback) {
+    this.fetchPage(http, 'http://www.linkedin.com/countserv/count/share?format=json&url=' + encodeURIComponent(URL), function(body) {
+      var interactions = JSON.parse(body);
+      statCallback({
+        'source': 'linkedin.com',
+        'url': URL,
+        'count': interactions.count,
+        'raw': interactions
+      });
+    });
+  },
+
+  getStumbleupon : function (URL, statCallback) {
+    this.fetchPage(http, 'http://www.stumbleupon.com/services/1.01/badge.getinfo?url=' + encodeURIComponent(URL), function(body) {
+      var interactions = JSON.parse(body);
+      statCallback({
+        'source': 'stumbleupon.com',
+        'url': URL,
+        'views': interactions.result.views,
+        'raw': interactions
+      });
+    });
+  },
+
   getURL : function (URL, statCallback) {
     if ((typeof URL) === 'object')
     {
@@ -107,17 +131,21 @@ var wst = {
     this.getGooglePlus(url.format(pURL), statCallback);
     this.getTwitter(url.format(pURL), statCallback);
     this.getFacebook(url.format(pURL), statCallback);
+    this.getLinkedin(url.format(pURL), statCallback);
+    this.getStumbleupon(url.format(pURL), statCallback);
     if (pURL.protocol == 'http:')
     {
       pURL.protocol = 'https:';
       this.getTwitter(url.format(pURL), statCallback);
       this.getFacebook(url.format(pURL), statCallback);
+      this.getStumbleupon(url.format(pURL), statCallback);
     }
     else if (pURL.protocol == 'https:')
     {
       pURL.protocol = 'http:';
       this.getTwitter(url.format(pURL), statCallback);
       this.getFacebook(url.format(pURL), statCallback);
+      this.getStumbleupon(url.format(pURL), statCallback);
     }
   }
 }
