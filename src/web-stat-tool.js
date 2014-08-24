@@ -1,10 +1,10 @@
 var http = require('http');
+var https = require('https');
 var cheerio = require('cheerio');
 var url = require('url');
 
 var wst = {
-  getAlexa : function (domain, statCallback)
-  {
+  getAlexa : function (domain, statCallback) {
     http.get('http://www.alexa.com/siteinfo/' + encodeURIComponent(domain), function(r) {
       var body = '';
 
@@ -27,6 +27,40 @@ var wst = {
           'dailyPageviewsPerVisitor': parseFloat($('[data-cat=pageviews_per_visitor] .metrics-data').text()),
           'dailyTimeOnSite': $('[data-cat=time_on_site] .metrics-data').text(),
           'searchVisits': parseFloat($('[data-cat=search_percent] .metrics-data').text())/100
+        });
+      });
+    });
+  },
+
+  getGooglePlus : function (URL, statCallback) {
+    https.get('https://plusone.google.com/_/+1/fastbutton?url=' + encodeURIComponent(URL), function(r) {
+      var body = '';
+
+      r.on('data', function (chunk) {
+        body += chunk;
+      });
+
+      r.on('end', function () {
+        var $ = cheerio.load(body);
+        var aggregate = $('#aggregateCount').text();
+
+        if (aggregate.match(/B$/)) // kinda doubt they actually do that one, but meh.
+        {
+           aggregate = parseFloat(aggregate) * 1e9;
+        }
+        else if (aggregate.match(/M$/))
+        {
+           aggregate = parseFloat(aggregate) * 1e6;
+        }
+        else if (aggregate.match(/B$/))
+        {
+           aggregate = parseFloat(aggregate) * 1e3;
+        }
+
+        statCallback({
+          'source': 'google.com/+',
+          'url': URL,
+          'aggregateCount': aggregate
         });
       });
     });
@@ -75,10 +109,20 @@ var wst = {
   },
 
   getURL : function (URL, statCallback) {
+    if ((typeof URL) === 'object')
+    {
+      for (i in URL)
+      {
+        this.getURL(URL[i], statCallback);
+      }
+      return;
+    }
+
     var pURL = url.parse(URL);
     var domain = pURL.host.replace(/([^.]+\.)*([^.]+\.[^.]+)$/,'$2');
 
     this.getAlexa(domain, statCallback);
+    this.getGooglePlus(url.format(pURL), statCallback);
     this.getTwitter(url.format(pURL), statCallback);
     this.getFacebook(url.format(pURL), statCallback);
     if (pURL.protocol == 'http:')
@@ -96,4 +140,4 @@ var wst = {
   }
 }
 
-wst.getURL(process.argv[2], console.log);
+wst.getURL(process.argv.slice(2), console.log);
