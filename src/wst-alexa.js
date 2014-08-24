@@ -2,23 +2,32 @@ var http = require('http');
 var cheerio = require('cheerio');
 var page = process.argv[2];
 
-http.get('http://www.alexa.com/siteinfo/' + encodeURIComponent(page), function(r) {
-  var body = '';
+function getAlexaRank (domain, statCallback)
+{
+  http.get('http://www.alexa.com/siteinfo/' + encodeURIComponent(domain), function(r) {
+    var body = '';
 
-  r.on('data', function (chunk) {
-    body += chunk;
+    r.on('data', function (chunk) {
+      body += chunk;
+    });
+
+    r.on('end', function () {
+      var $ = cheerio.load(body);
+
+      statCallback({
+        'source': 'alexa.com',
+        'rank':
+        {
+          'global': $('[data-cat=globalRank] .metrics-data').text(),
+          'country': $('[data-cat=countryRank] .metrics-data').text()
+        },
+        'bounceRate': $('[data-cat=bounce_percent] .metrics-data').text(),
+        'dailyPageviewsPerVisitor': $('[data-cat=pageviews_per_visitor] .metrics-data').text(),
+        'dailyTimeOnSite': $('[data-cat=time_on_site] .metrics-data').text(),
+        'searchVisits': $('[data-cat=search_percent] .metrics-data').text()
+      });
+    });
   });
+}
 
-  r.on('end', function () {
-    var $ = cheerio.load(body);
-    console.log($);
-
-    var alexaStats = {
-      'source': 'alexa.com',
-      'rank-global': $('[data-cat=globalRank] .metrics-data').text(),
-      'rank-country': $('[data-cat=countryRank] .metrics-data').text()
-    };
-
-    console.log(alexaStats);
-  });
-});
+getAlexaRank(process.argv[2], console.log);
