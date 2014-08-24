@@ -54,6 +54,10 @@ var wst = {
       {
          aggregate = parseFloat(aggregate) * 1e3;
       }
+      else
+      {
+         aggregate = parseFloat(aggregate);
+      }
 
       statCallback({
         'source': 'google.com/+',
@@ -69,7 +73,7 @@ var wst = {
       statCallback({
         'source': 'twitter.com',
         'url': URL,
-        'tweets': tweets.count,
+        'tweets': tweets.count ? tweets.count : 0,
         'raw': tweets
       });
     });
@@ -81,9 +85,8 @@ var wst = {
       statCallback({
         'source': 'facebook.com',
         'url': URL,
-        'shares': facebookInteractions.shares,
-        'likes': facebookInteractions.likes,
-        'comments': facebookInteractions.comments,
+        'shares': facebookInteractions.shares ? facebookInteractions.shares : 0,
+        'comments': facebookInteractions.comments ? facebookInteractions.comments : 0,
         'raw': facebookInteractions
       });
     });
@@ -95,7 +98,7 @@ var wst = {
       statCallback({
         'source': 'linkedin.com',
         'url': URL,
-        'count': interactions.count,
+        'count': interactions.count ? interactions.count : 0,
         'raw': interactions
       });
     });
@@ -107,7 +110,7 @@ var wst = {
       statCallback({
         'source': 'stumbleupon.com',
         'url': URL,
-        'views': interactions.result ? interactions.result.views : null,
+        'views': interactions.result && interactions.result.views ? interactions.result.views : 0,
         'raw': interactions
       });
     });
@@ -146,24 +149,29 @@ var wst = {
 
     var pURL = url.parse(URL);
 
-    this.getGooglePlus(url.format(pURL), statCallback);
-    this.getTwitter(url.format(pURL), statCallback);
-    this.getFacebook(url.format(pURL), statCallback);
-    this.getLinkedin(url.format(pURL), statCallback);
-    this.getStumbleupon(url.format(pURL), statCallback);
+    function process(data) {
+      data.originalURL = URL;
+      statCallback(data);
+    }
+
+    this.getGooglePlus(url.format(pURL), process);
+    this.getTwitter(url.format(pURL), process);
+    this.getFacebook(url.format(pURL), process);
+    this.getLinkedin(url.format(pURL), process);
+    this.getStumbleupon(url.format(pURL), process);
     if (pURL.protocol == 'http:')
     {
       pURL.protocol = 'https:';
-      this.getTwitter(url.format(pURL), statCallback);
-      this.getFacebook(url.format(pURL), statCallback);
-      this.getStumbleupon(url.format(pURL), statCallback);
+      this.getTwitter(url.format(pURL), process);
+      this.getFacebook(url.format(pURL), process);
+      this.getStumbleupon(url.format(pURL), process);
     }
     else if (pURL.protocol == 'https:')
     {
       pURL.protocol = 'http:';
-      this.getTwitter(url.format(pURL), statCallback);
-      this.getFacebook(url.format(pURL), statCallback);
-      this.getStumbleupon(url.format(pURL), statCallback);
+      this.getTwitter(url.format(pURL), process);
+      this.getFacebook(url.format(pURL), process);
+      this.getStumbleupon(url.format(pURL), process);
     }
   },
 
@@ -200,10 +208,85 @@ var wst = {
 
       process();
     });
+  },
+
+  getSitemapAggregate : function (URL, statCallback) {
+    var urls = {};
+    var domains = {};
+
+    function process (data) {
+      if (data.originalURL) {
+        if (!urls[data.originalURL]) {
+          urls[data.originalURL] = {
+            'total': 0,
+            'twitter': 0,
+            'facebook': 0,
+            'googleplus': 0,
+            'linkedin': 0,
+            'stumbleupon': 0
+          };
+        }
+
+        if (data.source == 'twitter.com')
+        {
+          urls[data.originalURL].total += data.tweets;
+          urls[data.originalURL].twitter += data.tweets;
+        }
+        else if (data.source == 'facebook.com')
+        {
+          urls[data.originalURL].total += data.shares + data.comments;
+          urls[data.originalURL].facebook += data.shares + data.comments;
+        }
+        else if (data.source == 'google.com/+')
+        {
+          urls[data.originalURL].total += data.aggregateCount;
+          urls[data.originalURL].googleplus += data.aggregateCount;
+        }
+        else if (data.source == 'linkedin.com')
+        {
+          urls[data.originalURL].total += data.count;
+          urls[data.originalURL].linkedin += data.count;
+        }
+        else if (data.source == 'stumbleupon')
+        {
+          urls[data.originalURL].total += data.views;
+          urls[data.originalURL].stumbleupon += data.views;
+        }
+      }
+      else if (data.domain) {
+        if (!domains[data.domain]) {
+          domains[data.domain] = {
+            'alexaRank': null
+          };
+        }
+
+        if (data.source == 'alexa.com')
+        {
+          domains[data.domain].alexaRank = data.rank.global;
+        }
+      }
+
+      statCallback(urls, domains);
+    }
+
+    this.getSitemap(URL, process);
   }
 }
 
-//wst.getURLStatistics(process.argv.slice(2), console.log);
-//wst.getDomainStatistics(process.argv.slice(2), console.log);
+var _urls = {};
+var _domains = {};
 
-wst.getSitemap(process.argv.slice(2), console.log);
+wst.getSitemapAggregate(process.argv.slice(2), function(urls, domains) {
+  _urls = urls;
+  _domains = domains;
+});
+
+process.on('exit', function(code) {
+  for (i in _urls) {
+    if (_urls[i].total == 0) {
+      delete _urls[i];
+    }
+  }
+
+  console.log({'urls': _urls, 'domains': _domains});
+});
