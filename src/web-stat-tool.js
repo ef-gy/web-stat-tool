@@ -4,8 +4,8 @@ var cheerio = require('cheerio');
 var url = require('url');
 
 var wst = {
-  getAlexa : function (domain, statCallback) {
-    http.get('http://www.alexa.com/siteinfo/' + encodeURIComponent(domain), function(r) {
+  fetchPage : function (http, URL, pageCallback) {
+    http.get(URL, function(r) {
       var body = '';
 
       r.on('data', function (chunk) {
@@ -13,97 +13,79 @@ var wst = {
       });
 
       r.on('end', function () {
-        var $ = cheerio.load(body);
+        pageCallback(body);
+      });
+    });
+  },
 
-        statCallback({
-          'source': 'alexa.com',
-          'domain': domain,
-          'rank':
-          {
-            'global': parseInt($('[data-cat=globalRank] .metrics-data').text().replace(/,/g,'')),
-            'country': parseInt($('[data-cat=countryRank] .metrics-data').text())
-          },
-          'bounceRate': parseFloat($('[data-cat=bounce_percent] .metrics-data').text())/100,
-          'dailyPageviewsPerVisitor': parseFloat($('[data-cat=pageviews_per_visitor] .metrics-data').text()),
-          'dailyTimeOnSite': $('[data-cat=time_on_site] .metrics-data').text(),
-          'searchVisits': parseFloat($('[data-cat=search_percent] .metrics-data').text())/100
-        });
+  getAlexa : function (domain, statCallback) {
+    this.fetchPage(http, 'http://www.alexa.com/siteinfo/' + encodeURIComponent(domain), function(body) {
+      var $ = cheerio.load(body);
+
+      statCallback({
+        'source': 'alexa.com',
+        'domain': domain,
+        'rank':
+        {
+          'global': parseInt($('[data-cat=globalRank] .metrics-data').text().replace(/,/g,'')),
+          'country': parseInt($('[data-cat=countryRank] .metrics-data').text())
+        },
+        'bounceRate': parseFloat($('[data-cat=bounce_percent] .metrics-data').text())/100,
+        'dailyPageviewsPerVisitor': parseFloat($('[data-cat=pageviews_per_visitor] .metrics-data').text()),
+        'dailyTimeOnSite': $('[data-cat=time_on_site] .metrics-data').text(),
+        'searchVisits': parseFloat($('[data-cat=search_percent] .metrics-data').text())/100
       });
     });
   },
 
   getGooglePlus : function (URL, statCallback) {
-    https.get('https://plusone.google.com/_/+1/fastbutton?url=' + encodeURIComponent(URL), function(r) {
-      var body = '';
+    this.fetchPage(https, 'https://plusone.google.com/_/+1/fastbutton?url=' + encodeURIComponent(URL), function(body) {
+      var $ = cheerio.load(body);
+      var aggregate = $('#aggregateCount').text();
 
-      r.on('data', function (chunk) {
-        body += chunk;
-      });
+      if (aggregate.match(/B$/)) // kinda doubt they actually do that one, but meh.
+      {
+         aggregate = parseFloat(aggregate) * 1e9;
+      }
+      else if (aggregate.match(/M$/))
+      {
+         aggregate = parseFloat(aggregate) * 1e6;
+      }
+      else if (aggregate.match(/B$/))
+      {
+         aggregate = parseFloat(aggregate) * 1e3;
+      }
 
-      r.on('end', function () {
-        var $ = cheerio.load(body);
-        var aggregate = $('#aggregateCount').text();
-
-        if (aggregate.match(/B$/)) // kinda doubt they actually do that one, but meh.
-        {
-           aggregate = parseFloat(aggregate) * 1e9;
-        }
-        else if (aggregate.match(/M$/))
-        {
-           aggregate = parseFloat(aggregate) * 1e6;
-        }
-        else if (aggregate.match(/B$/))
-        {
-           aggregate = parseFloat(aggregate) * 1e3;
-        }
-
-        statCallback({
-          'source': 'google.com/+',
-          'url': URL,
-          'aggregateCount': aggregate
-        });
+      statCallback({
+        'source': 'google.com/+',
+        'url': URL,
+        'aggregateCount': aggregate
       });
     });
   },
 
   getTwitter : function (URL, statCallback) {
-    http.get('http://urls.api.twitter.com/1/urls/count.json?url=' + encodeURIComponent(URL), function(r) {
-      var body = '';
-
-      r.on('data', function (chunk) {
-        body += chunk;
-      });
-
-      r.on('end', function () {
-        var tweets = JSON.parse(body);
-        statCallback({
-          'source': 'twitter.com',
-          'url': URL,
-          'tweets': tweets.count,
-          'raw': tweets
-        });
+    this.fetchPage(http, 'http://urls.api.twitter.com/1/urls/count.json?url=' + encodeURIComponent(URL), function(body) {
+      var tweets = JSON.parse(body);
+      statCallback({
+        'source': 'twitter.com',
+        'url': URL,
+        'tweets': tweets.count,
+        'raw': tweets
       });
     });
   },
 
   getFacebook : function (URL, statCallback) {
-    http.get('http://graph.facebook.com/?id=' + encodeURIComponent(URL), function(r) {
-      var body = '';
-
-      r.on('data', function (chunk) {
-        body += chunk;
-      });
-
-      r.on('end', function () {
-        var facebookInteractions = JSON.parse(body);
-        statCallback({
-          'source': 'facebook.com',
-          'url': URL,
-          'shares': facebookInteractions.shares,
-          'likes': facebookInteractions.likes,
-          'comments': facebookInteractions.comments,
-          'raw': facebookInteractions
-        });
+    this.fetchPage(http, 'http://graph.facebook.com/?id=' + encodeURIComponent(URL), function(body) {
+      var facebookInteractions = JSON.parse(body);
+      statCallback({
+        'source': 'facebook.com',
+        'url': URL,
+        'shares': facebookInteractions.shares,
+        'likes': facebookInteractions.likes,
+        'comments': facebookInteractions.comments,
+        'raw': facebookInteractions
       });
     });
   },
