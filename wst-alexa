@@ -1,5 +1,0 @@
-#!/bin/sh
-
-WST_XSLTPATH=./xslt
-
-curl "http://www.alexa.com/siteinfo/$1" -s|xsltproc --html --nonet --novalid "$WST_XSLTPATH/web-stat-tool-alexa.xslt" - 2>/dev/null
