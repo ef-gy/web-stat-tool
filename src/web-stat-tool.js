@@ -312,5 +312,5 @@ process.on('exit', function(code) {
     }
   }
 
-  console.log({'urls': _urls, 'domains': _domains});
+  console.log(JSON.stringify({'urls': _urls, 'domains': _domains}));
 });
