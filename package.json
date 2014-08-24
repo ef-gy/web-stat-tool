@@ -1,6 +1,7 @@
 {
   "name": "web-stat-tool",
   "version": "0.0.1",
+  "repository": "https://github.com/ef-gy/web-stat-tool",
   "dependencies": {
     "cheerio": "git://github.com/cheeriojs/cheerio.git"
   }
