@@ -110,7 +110,24 @@ var wst = {
       statCallback({
         'source': 'stumbleupon.com',
         'url': URL,
-        'views': interactions.result && interactions.result.views ? interactions.result.views : 0,
+        'views': interactions.result && interactions.result.views ? parseInt(interactions.result.views) : 0,
+        'raw': interactions
+      });
+    });
+  },
+
+  getReddit : function (URL, statCallback) {
+    this.fetchPage(http, 'http://buttons.reddit.com/button_info.json?url=' + encodeURIComponent(URL), function(body) {
+      var interactions = JSON.parse(body);
+      statCallback({
+        'source': 'reddit.com',
+        'url': URL,
+        'score': interactions.data
+              && interactions.data.children
+              && interactions.data.children[0]
+              && interactions.data.children[0].data
+              && interactions.data.children[0].data.score
+               ? interactions.data.children[0].data.score : 0,
         'raw': interactions
       });
     });
@@ -159,6 +176,7 @@ var wst = {
     this.getFacebook(url.format(pURL), process);
     this.getLinkedin(url.format(pURL), process);
     this.getStumbleupon(url.format(pURL), process);
+    this.getReddit(url.format(pURL), process);
     if (pURL.protocol == 'http:')
     {
       pURL.protocol = 'https:';
@@ -223,7 +241,8 @@ var wst = {
             'facebook': 0,
             'googleplus': 0,
             'linkedin': 0,
-            'stumbleupon': 0
+            'stumbleupon': 0,
+            'reddit': 0
           };
         }
 
@@ -247,10 +266,15 @@ var wst = {
           urls[data.originalURL].total += data.count;
           urls[data.originalURL].linkedin += data.count;
         }
-        else if (data.source == 'stumbleupon')
+        else if (data.source == 'stumbleupon.com')
         {
           urls[data.originalURL].total += data.views;
           urls[data.originalURL].stumbleupon += data.views;
+        }
+        else if (data.source == 'reddit.com')
+        {
+          urls[data.originalURL].total += data.score;
+          urls[data.originalURL].reddit += data.score;
         }
       }
       else if (data.domain) {
