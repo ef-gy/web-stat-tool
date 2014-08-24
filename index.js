@@ -1,1 +1,1 @@
-module.exports = require('./lib/wst')
+module.exports = require('./lib/webstats');

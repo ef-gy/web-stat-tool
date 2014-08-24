@@ -1,9 +1,9 @@
-var wst = require('./lib/wst');
+var webstats = require('./lib/webstats');
 
 var _urls = {};
 var _domains = {};
 
-wst.getSitemapAggregate(process.argv.slice(2), function(urls, domains) {
+webstats.getSitemapAggregate(process.argv.slice(2), function(urls, domains) {
   _urls = urls;
   _domains = domains;
 });
