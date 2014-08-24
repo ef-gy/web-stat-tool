@@ -21,7 +21,6 @@ var wst = {
   getAlexa : function (domain, statCallback) {
     this.fetchPage(http, 'http://www.alexa.com/siteinfo/' + encodeURIComponent(domain), function(body) {
       var $ = cheerio.load(body);
-
       statCallback({
         'source': 'alexa.com',
         'domain': domain,
@@ -114,20 +113,39 @@ var wst = {
     });
   },
 
-  getURL : function (URL, statCallback) {
+  getDomainStatistics : function (URL, statCallback) {
+    if ((typeof URL) === 'object')
+    {
+      var testedDomains = [];
+      for (i in URL)
+      {
+        var pURL = url.parse(URL[i]);
+        var domain = pURL.host.replace(/([^.]+\.)*([^.]+\.[^.]+)$/,'$2');
+
+        if (testedDomains.indexOf(domain) == -1)
+        {
+          testedDomains.push(domain);
+          this.getDomainStatistics(domain, statCallback);
+        }
+      }
+      return;
+    }
+
+    this.getAlexa(URL, statCallback);
+  },
+
+  getURLStatistics : function (URL, statCallback) {
     if ((typeof URL) === 'object')
     {
       for (i in URL)
       {
-        this.getURL(URL[i], statCallback);
+        this.getURLStatistics(URL[i], statCallback);
       }
       return;
     }
 
     var pURL = url.parse(URL);
-    var domain = pURL.host.replace(/([^.]+\.)*([^.]+\.[^.]+)$/,'$2');
 
-    this.getAlexa(domain, statCallback);
     this.getGooglePlus(url.format(pURL), statCallback);
     this.getTwitter(url.format(pURL), statCallback);
     this.getFacebook(url.format(pURL), statCallback);
@@ -147,7 +165,11 @@ var wst = {
       this.getFacebook(url.format(pURL), statCallback);
       this.getStumbleupon(url.format(pURL), statCallback);
     }
+  },
+
+  getSitemap : function (URL, statCallback) {
   }
 }
 
-wst.getURL(process.argv.slice(2), console.log);
+wst.getURLStatistics(process.argv.slice(2), console.log);
+wst.getDomainStatistics(process.argv.slice(2), console.log);
