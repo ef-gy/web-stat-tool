@@ -9,7 +9,7 @@ webstats.getSitemapAggregate(process.argv.slice(2), function(urls, domains) {
 });
 
 process.on('exit', function(code) {
-  var out = '<urls>';
+  var out = '<social>';
 
   for (i in _urls) {
     if (_urls[i].total > 0) {
@@ -31,7 +31,7 @@ process.on('exit', function(code) {
     out += '<domain id="' + i + '" alexa-rank="' + _domains[i].alexaRank + '"/>';
   }
 
-  out += '</urls>';
+  out += '</social>';
 
   console.log(out);
 });
