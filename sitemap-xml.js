@@ -9,7 +9,7 @@ webstats.getSitemapAggregate(process.argv.slice(2), function(urls, domains) {
 });
 
 process.on('exit', function(code) {
-  var out = '<social>';
+  var out = '<social xmlns="https://github.com/ef-gy/web-stat-tool">';
 
   for (i in _urls) {
     if (_urls[i].total > 0) {
