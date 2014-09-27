@@ -1,4 +1,6 @@
-var webstats = require('./lib/webstats');
+#!/usr/bin/env nodejs
+
+var webstats = require('../lib/webstats');
 
 var _urls = {};
 var _domains = {};

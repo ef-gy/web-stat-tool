@@ -1,11 +1,31 @@
 {
   "name": "webstats",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "Command line tools to grab social media statistics.",
+  "keywords": [
+    "cli",
+    "social"
+  ],
+  "author": {
+    "name": "Magnus Deininger",
+    "email": "magnus@ef.gy",
+    "url": "https://ef.gy/"
+  },
+  "bin": {
+    "wst-sitemap": "bin/sitemap.js",
+    "wst-sitemap-xml": "bin/sitemap-xml.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ef-gy/web-stat-tool"
   },
   "dependencies": {
-    "cheerio": "git://github.com/cheeriojs/cheerio.git"
+    "cheerio": "~0.17.0"
+  },
+  "license": "MIT",
+  "preferGlobal": true,
+  "directories": {
+    "lib": "lib",
+    "bin": "bin"
   }
 }
