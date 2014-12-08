@@ -1,6 +1,6 @@
 {
   "name": "webstats",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Command line tools to grab social media statistics.",
   "keywords": [
     "cli",
