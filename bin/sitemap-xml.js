@@ -18,7 +18,6 @@ process.on('exit', function(code) {
       var e = _urls[i];
       out += '<url id="' + i +
              '" total="' + e.total +
-             '" twitter="' + e.twitter +
              '" facebook="' + e.facebook +
              '" google-plus="' + e.googleplus +
              '" reddit="' + e.reddit +
